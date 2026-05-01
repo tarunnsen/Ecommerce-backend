@@ -4,7 +4,20 @@ const { productModel } = require("../models/product");
 // ======================
 // AUTH CHECK
 // ======================
+
 exports.authCheck = (req, res) => {
+  const token = req.headers["authorization"]?.split(" ")[1];
+
+  if (token) {
+    try {
+      const jwt = require("jsonwebtoken");
+      jwt.verify(token, process.env.JWT_KEY); // ✅ JWT_KEY
+      return res.json({ authenticated: true });
+    } catch (err) {
+      // invalid token — session check karega
+    }
+  }
+
   res.json({ authenticated: req.isAuthenticated() });
 };
 

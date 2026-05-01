@@ -1,11 +1,9 @@
 const passport = require("passport");
+const jwt = require("jsonwebtoken"); // ✅ add karo
 
-// Start Google OAuth
+// Start Google OAuth — same rehega
 exports.googleAuth = (req, res, next) => {
   const redirectURL = req.query.redirect || "/";
-
-  console.log("🔁 Passing redirect in OAuth state:", redirectURL);
-
   passport.authenticate("google", {
     scope: ["profile", "email"],
     prompt: "select_account",
@@ -13,22 +11,28 @@ exports.googleAuth = (req, res, next) => {
   })(req, res, next);
 };
 
-// Google Callback
+// Google Callback 
 exports.googleCallback = (req, res) => {
   try {
     let redirectURL = req.query.state || "/";
+    if (!redirectURL.startsWith("/")) redirectURL = "/";
 
-    // 🔒 Security check
-    if (!redirectURL.startsWith("/")) {
-      redirectURL = "/";
-    }
-
-    // ✅ React frontend pe redirect karo — backend pe nahi
     const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+    const jwt = require("jsonwebtoken");
 
-    console.log("✅ Redirecting user to React:", FRONTEND_URL + redirectURL);
+    const token = jwt.sign(
+      {
+        id: req.user._id,
+        email: req.user.email,
+        name: req.user.name,
+      },
+      process.env.JWT_KEY, // ✅ JWT_KEY — .env se match
+      { expiresIn: "7d" }
+    );
 
-    res.redirect(FRONTEND_URL + redirectURL);
+    res.redirect(
+      `${FRONTEND_URL}/auth/callback?token=${token}&redirect=${encodeURIComponent(redirectURL)}`
+    );
 
   } catch (err) {
     console.error("Redirect error:", err);
@@ -36,20 +40,14 @@ exports.googleCallback = (req, res) => {
   }
 };
 
-// Logout
+// Logout — same rehega
 exports.logoutUser = (req, res) => {
   req.logout((err) => {
     if (err) {
-      console.error("Logout error:", err);
-
       return res.status(500).json({ success: false, message: "Logout failed" });
     }
-
     req.session.destroy((destroyErr) => {
-      if (destroyErr) {
-        console.error("Session destroy error:", destroyErr);
-      }
-
+      if (destroyErr) console.error("Session destroy error:", destroyErr);
       res.clearCookie("connect.sid", {
         httpOnly: true,
         secure: true,
