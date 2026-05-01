@@ -6,7 +6,7 @@ const dotenv = require("dotenv");
 const compression = require("compression");
 const cors = require("cors");
 const morgan = require("morgan");
-const MongoStore = require("connect-mongo");
+const { MongoStore } = require("connect-mongo");
 
 dotenv.config();
 
