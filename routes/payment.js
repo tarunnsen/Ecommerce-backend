@@ -1,7 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 
-const router = express.Router(); // 🔥 TOP PAR
+const router = express.Router();
+const { validateUser } = require("../middleware/userAuth");
 
 const {
   createOrder,
@@ -29,7 +30,7 @@ router.get("/user/details", (req, res) => {
 // ======================
 // CHECKOUT
 // ======================
-router.get("/checkout/:id", checkoutPage);
+router.get("/checkout/:id", validateUser, checkoutPage);
 
 // ======================
 // PAYMENT ROUTES

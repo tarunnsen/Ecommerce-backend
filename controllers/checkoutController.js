@@ -1,6 +1,13 @@
 const { productModel } = require("../models/product");
 const { cartModel } = require("../models/cart");
 
+// ✅ Helper — JWT ya session dono se userId nikalo
+const getUserId = (req) => {
+  return req.user?.id          // JWT token se (mobile)
+    || req.user?._id           // JWT token se (alternate)
+    || req.session?.passport?.user; // Session se (laptop)
+};
+
 exports.checkoutPage = async (req, res) => {
   if (!req.user) {
     return res.status(401).json({
@@ -14,24 +21,22 @@ exports.checkoutPage = async (req, res) => {
     let product = null;
     let cart = null;
 
-    // ✅ FIX — pehle check karo "cart" string hai ya real product ID
     const paramId = req.params.id;
     const isCartCheckout = paramId === "cart";
 
     if (!isCartCheckout) {
-      // Buy Now flow — valid MongoDB ID hai toh hi findById karo
       product = await productModel.findById(paramId).lean();
     }
 
     if (product) {
-      // Buy Now — single product ko cart ki tarah treat karo
       cart = {
         products: [{ productId: product, quantity: 1 }]
       };
     } else {
-      // Cart checkout flow
+      const userId = getUserId(req); // ✅ SIRF YE BADLA
+
       cart = await cartModel
-        .findOne({ user: req.session?.passport?.user })
+        .findOne({ user: userId }) // ✅ session nahi — helper se
         .populate("products.productId")
         .lean();
 

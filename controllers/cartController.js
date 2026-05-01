@@ -1,17 +1,23 @@
 const { cartModel } = require("../models/cart");
 const { productModel } = require("../models/product");
+const jwt = require("jsonwebtoken");
+
+// ✅ Helper — session ya JWT dono se userId nikalo
+const getUserId = (req) => {
+  return req.user?.id        // JWT token se (mobile)
+    || req.user?._id         // JWT token se (alternate)
+    || req.session?.passport?.user; // Session se (laptop)
+};
 
 // ======================
 // AUTH CHECK
 // ======================
-
 exports.authCheck = (req, res) => {
   const token = req.headers["authorization"]?.split(" ")[1];
 
   if (token) {
     try {
-      const jwt = require("jsonwebtoken");
-      jwt.verify(token, process.env.JWT_KEY); // ✅ JWT_KEY
+      jwt.verify(token, process.env.JWT_KEY);
       return res.json({ authenticated: true });
     } catch (err) {
       // invalid token — session check karega
@@ -26,8 +32,10 @@ exports.authCheck = (req, res) => {
 // ======================
 exports.getCart = async (req, res) => {
   try {
+    const userId = getUserId(req); // ✅ helper use karo
+
     const cart = await cartModel
-      .findOne({ user: req.session?.passport?.user })
+      .findOne({ user: userId })
       .populate("products.productId");
 
     if (!cart) {
@@ -37,7 +45,6 @@ exports.getCart = async (req, res) => {
       });
     }
 
-    // ✅ Total calculate karke bhej rahe hain React ko
     const total = cart.products.reduce((sum, item) => {
       const price = item.productId?.discountPrice || item.productId?.price || 0;
       return sum + price * item.quantity;
@@ -45,11 +52,7 @@ exports.getCart = async (req, res) => {
 
     res.json({
       success: true,
-      data: {
-        _id: cart._id,
-        products: cart.products,
-        total
-      }
+      data: { _id: cart._id, products: cart.products, total }
     });
 
   } catch (err) {
@@ -63,7 +66,9 @@ exports.getCart = async (req, res) => {
 // ======================
 exports.addToCart = async (req, res) => {
   try {
-    if (!req.isAuthenticated()) {
+    const userId = getUserId(req); // ✅ helper use karo
+
+    if (!userId) {
       return res.status(401).json({
         success: false,
         message: "Login required",
@@ -72,23 +77,21 @@ exports.addToCart = async (req, res) => {
     }
 
     const product = await productModel.findById(req.params.id);
-
     if (!product) {
       return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    let cart = await cartModel.findOne({ user: req.user._id });
+    let cart = await cartModel.findOne({ user: userId });
 
     if (!cart) {
       cart = new cartModel({
-        user: req.user._id,
+        user: userId,
         products: [{ productId: product._id, quantity: 1 }]
       });
     } else {
       const existingProduct = cart.products.find(
         p => p.productId.toString() === product._id.toString()
       );
-
       if (existingProduct) {
         existingProduct.quantity += 1;
       } else {
@@ -97,8 +100,6 @@ exports.addToCart = async (req, res) => {
     }
 
     await cart.save();
-
-    // ✅ redirect hata diya — JSON bhej rahe hain
     res.json({ success: true, message: "Product added to cart" });
 
   } catch (err) {
@@ -112,10 +113,9 @@ exports.addToCart = async (req, res) => {
 // ======================
 exports.decreaseQuantity = async (req, res) => {
   try {
-    const cart = await cartModel.findOne({
-      user: req.session.passport.user
-    });
+    const userId = getUserId(req); // ✅ helper use karo
 
+    const cart = await cartModel.findOne({ user: userId });
     if (!cart) {
       return res.status(404).json({ success: false, message: "Cart not found" });
     }
@@ -134,9 +134,8 @@ exports.decreaseQuantity = async (req, res) => {
 
     await cart.save();
 
-    // ✅ Updated cart JSON mein bhej rahe hain
     const updatedCart = await cartModel
-      .findOne({ user: req.session.passport.user })
+      .findOne({ user: userId })
       .populate("products.productId");
 
     const total = updatedCart.products.reduce((sum, item) => {
@@ -146,11 +145,7 @@ exports.decreaseQuantity = async (req, res) => {
 
     res.json({
       success: true,
-      data: {
-        _id: updatedCart._id,
-        products: updatedCart.products,
-        total
-      }
+      data: { _id: updatedCart._id, products: updatedCart.products, total }
     });
 
   } catch (err) {
@@ -164,10 +159,9 @@ exports.decreaseQuantity = async (req, res) => {
 // ======================
 exports.removeFromCart = async (req, res) => {
   try {
-    const cart = await cartModel.findOne({
-      user: req.session.passport.user
-    });
+    const userId = getUserId(req); // ✅ helper use karo
 
+    const cart = await cartModel.findOne({ user: userId });
     if (!cart) {
       return res.status(404).json({ success: false, message: "Cart not found" });
     }
@@ -178,9 +172,8 @@ exports.removeFromCart = async (req, res) => {
 
     await cart.save();
 
-    // ✅ Updated cart JSON mein bhej rahe hain
     const updatedCart = await cartModel
-      .findOne({ user: req.session.passport.user })
+      .findOne({ user: userId })
       .populate("products.productId");
 
     const total = updatedCart.products.reduce((sum, item) => {
@@ -190,11 +183,7 @@ exports.removeFromCart = async (req, res) => {
 
     res.json({
       success: true,
-      data: {
-        _id: updatedCart._id,
-        products: updatedCart.products,
-        total
-      }
+      data: { _id: updatedCart._id, products: updatedCart.products, total }
     });
 
   } catch (err) {
