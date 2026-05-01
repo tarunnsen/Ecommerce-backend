@@ -1,7 +1,6 @@
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
-const cookieParser = require("cookie-parser");
 const passport = require("passport");
 const dotenv = require("dotenv");
 const compression = require("compression");
@@ -16,7 +15,7 @@ require("./config/google_auth");
 
 const app = express();
 
-// ✅ Trust proxy (IMPORTANT for Render / production)
+// ✅ Trust proxy — SABSE PEHLE (Render ke liye zaroori)
 app.set("trust proxy", 1);
 
 // ======================
@@ -25,18 +24,29 @@ app.set("trust proxy", 1);
 
 app.use(compression());
 
-// ✅ CORS — React frontend ke liye fix kiya
+// ✅ CORS — React frontend ke liye (credentials + multiple origins)
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://ecommerce-frontend-three-beta.vercel.app",
-      "https://ecommerce-frontend-git-main-tarunsenwork-9883s-projects.vercel.app",
-      "https://ecommerce-frontend-raeil1ker-tarunsenwork-9883s-projects.vercel.app"
-    ],
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "https://ecommerce-frontend-three-beta.vercel.app",
+        "https://ecommerce-frontend-git-main-tarunsenwork-9883s-projects.vercel.app",
+        "https://ecommerce-frontend-raeil1ker-tarunsenwork-9883s-projects.vercel.app",
+      ];
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("CORS: Origin not allowed — " + origin));
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// ✅ OPTIONS preflight — CORS ke baad, session se PEHLE
+app.options("*", cors());
 
 app.use(
   morgan(process.env.NODE_ENV === "production" ? "combined" : "dev")
@@ -46,7 +56,8 @@ app.use(
 app.use("/uploads", express.static("uploads"));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(cookieParser());
+// ✅ FIX 1: cookieParser HATAYA — express-session khud cookie read karta hai
+//    cookieParser + express-session saath mein cookie conflict karte hain
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -54,22 +65,22 @@ app.use(express.urlencoded({ extended: true }));
 // 🔐 SESSION CONFIG
 // ======================
 
-// Session config replace karo
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "super_secret_key",
     resave: false,
     saveUninitialized: false,
-    // ✅ MongoDB mein sessions save karo
+    proxy: true, // ✅ Render reverse proxy ke liye zaroori
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
-      ttl: 24 * 60 * 60, // 1 din
+      ttl: 24 * 60 * 60, // 1 din = 86400 seconds
+      autoRemove: "native",
     }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",   // HTTPS pe true
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cross-domain ke liye "none"
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   })
 );
@@ -82,17 +93,28 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // ======================
-// 🔁 AUTH MIDDLEWARE — React ke liye JSON response
+// 🔁 AUTH MIDDLEWARE — FIX 2: /cart/auth-check ko block mat karo
 // ======================
 
 app.use((req, res, next) => {
   const isStaticFile = req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg)$/);
 
+  // ✅ Yeh routes publicly accessible hone chahiye — inhe 401 mat do
+  const publicPaths = [
+    "/cart/auth-check", // ← SABSE ZAROORI: frontend isse login check karta hai
+    "/auth",            // Google OAuth routes
+    "/login",
+    "/product",         // Products publicly visible hone chahiye
+    "/order",
+  ];
+
+  const isPublic = publicPaths.some((p) => req.path.startsWith(p));
+
   const needsAuthRoute =
     req.path.startsWith("/cart") ||
     req.path.startsWith("/checkout");
 
-  if (!req.user && needsAuthRoute && !isStaticFile) {
+  if (!req.user && needsAuthRoute && !isStaticFile && !isPublic) {
     return res.status(401).json({
       success: false,
       message: "Login required",
