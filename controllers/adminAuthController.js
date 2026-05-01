@@ -32,8 +32,36 @@ exports.createAdmin = async (req, res) => {
 };
 
 // ✅ React admin login page handle karega
-exports.loginPage = (req, res) => {
-  res.redirect(`${FRONTEND_URL}/admin/login`);
+exports.loginAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const admin = await adminModel.findOne({ email });
+    if (!admin) return res.status(404).json({
+      success: false, message: "Admin not found"
+    });
+
+    const valid = await bcrypt.compare(password, admin.password);
+    if (!valid) return res.status(401).json({
+      success: false, message: "Invalid password"
+    });
+
+    const token = jwt.sign(
+      { email: admin.email, admin: true },
+      process.env.JWT_KEY,
+      { expiresIn: '24h' }
+    );
+
+    // ✅ Token JSON mein bhejo — cookie ki zaroorat nahi
+    res.json({
+      success: true,
+      message: "Login successful",
+      token  // ← React localStorage mein save karega
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 exports.loginAdmin = async (req, res) => {

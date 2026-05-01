@@ -3,24 +3,27 @@ require("dotenv").config();
 
 async function validateAdmin(req, res, next) {
     try {
-
-        let token = req.cookies.token;
+        // ✅ Pehle header check karo, phir cookie
+        let token = req.headers['authorization']?.split(' ')[1]
+            || req.cookies.token;
 
         if (!token) {
-            return res.redirect("/admin/login");
+            return res.status(401).json({
+                success: false,
+                message: "Login required"
+            });
         }
 
         let data = jwt.verify(token, process.env.JWT_KEY);
-
         req.user = data;
-
         next();
 
     } catch (err) {
-
         console.error("Admin Auth Error:", err);
-        return res.redirect("/admin/login");
-
+        return res.status(401).json({
+            success: false,
+            message: "Invalid token"
+        });
     }
 }
 
