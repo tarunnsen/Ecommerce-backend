@@ -54,9 +54,6 @@ app.use(express.urlencoded({ extended: true }));
 // 🔐 SESSION CONFIG
 // ======================
 
-// Upar add karo
-const MongoStore = require("connect-mongo");
-
 // Session config replace karo
 app.use(
   session({
