@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign up</title>
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+  <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+    href="https://fonts.googleapis.com/css2?display=swap&family=Noto+Sans:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;700;800" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+</head>
+
+<body>
+  <div class="flex min-h-screen flex-col bg-[#f8f9fc] overflow-x-hidden"
+    style='font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;'>
+    <div class="flex flex-1 justify-center py-10 px-4 sm:px-10">
+      <div class="w-full max-w-md bg-white rounded-xl shadow-md p-6 sm:p-8">
+        <h1 class="text-[#0e121b] text-2xl font-bold text-center pb-4">Sign up</h1>
+
+        <!-- Email Field -->
+        <div class="mb-4">
+          <label class="block text-[#0e121b] text-base font-medium mb-2">Email</label>
+          <input type="email" placeholder="Email"
+            class="w-full rounded-xl border border-[#d0d7e7] bg-[#e7ebf3] p-4 h-14 placeholder:text-[#4e6797] text-[#0e121b] focus:outline-none focus:ring-2 focus:ring-[#306de8]" />
+        </div>
+        <p class="text-[#4e6797] text-sm mb-4">You will receive a confirmation email</p>
+
+        <!-- Password Field -->
+        <div class="mb-4">
+          <label class="block text-[#0e121b] text-base font-medium mb-2">Password</label>
+          <input type="password" placeholder="Password"
+            class="w-full rounded-xl border border-[#d0d7e7] bg-[#e7ebf3] p-4 h-14 placeholder:text-[#4e6797] text-[#0e121b] focus:outline-none focus:ring-2 focus:ring-[#306de8]" />
+        </div>
+        <p class="text-[#4e6797] text-sm mb-4">Use at least 8 characters.</p>
+
+        <!-- Age Checkbox -->
+        <div class="flex items-start gap-3 mb-6">
+          <input type="checkbox" id="ageCheck" checked
+            class="mt-1 h-5 w-5 border-2 border-[#d0d7e7] text-[#306de8] focus:ring-0 focus:outline-none rounded" />
+          <label for="ageCheck" class="text-[#0e121b] text-base">I am over 13 years old.</label>
+        </div>
+
+        <!-- Google Auth Button -->
+        <form action="/auth/google" method="GET" class="mb-6">
+          <button type="submit"
+            class="w-full flex items-center justify-center gap-2 h-12 px-4 bg-[#e7ebf3] text-[#0e121b] font-bold text-sm rounded-xl hover:bg-[#dce1ec] transition">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor"
+              viewBox="0 0 256 256">
+              <path
+                d="M224,128a96,96,0,1,1-21.95-61.09,8,8,0,1,1-12.33,10.18A80,80,0,1,0,207.6,136H128a8,8,0,0,1,0-16h88A8,8,0,0,1,224,128Z">
+              </path>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+        </form>
+
+        <!-- Terms and Conditions -->
+        <p class="text-[#4e6797] text-sm text-center underline">
+          By continuing, you agree to our Terms of Service and Privacy Policy
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In | TechFocus</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+    <link rel="stylesheet" as="style" onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans', sans-serif;
+        }
+
+        /* Smooth transition on buttons */
+        button {
+            transition: all 0.2s ease-in-out;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+
+<body class="bg-[#f8f9fc] min-h-screen flex flex-col">
+    <header class="flex items-center justify-between border-b border-[#e7ebf3] px-6 md:px-10 py-3">
+        <div class="flex items-center gap-3 text-[#0e121b]">
+            <div class="w-5 h-5">
+                <svg viewBox="0 0 48 48" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M4 42.4379C4 42.4379 14.0962 36.0744 24 41.1692C35.0664 46.8624 44 42.2078 44 42.2078L44 7.01134C44 7.01134 35.068 11.6577 24.0031 5.96913C14.0971 0.876274 4 7.27094 4 7.27094L4 42.4379Z" />
+                </svg>
+            </div>
+            <h2 class="text-lg font-bold tracking-tight">TechFocus</h2>
+        </div>
+        <div class="flex items-center gap-4 text-sm font-medium">
+            <a href="#" class="hidden sm:inline text-[#0e121b]">Explore</a>
+            <a href="/users/signup" class="text-[#0e121b]">Sign up</a>
+            <button class="hidden sm:inline bg-[#e7ebf3] text-[#0e121b] px-4 py-2 rounded-xl font-bold">
+                Cart
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex justify-center px-4 py-8">
+        <div class="w-full max-w-md bg-white rounded-xl shadow-sm p-6 space-y-6">
+            <h1 class="text-2xl font-bold text-center text-[#0e121b]">Sign in</h1>
+
+            <div class="space-y-4">
+                <label class="block">
+                    <span class="block text-base font-medium text-[#0e121b] mb-2">Email address</span>
+                    <input type="email" placeholder="Email address"
+                        class="w-full h-12 px-4 rounded-xl border border-[#d0d7e7] bg-[#f8f9fc] placeholder-[#4e6797] focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </label>
+
+                <button
+                    class="w-full h-11 bg-[#306de8] text-white font-bold rounded-xl hover:opacity-90 transition">Continue</button>
+            </div>
+
+            <div class="relative text-center">
+                <span class="text-sm text-[#4e6797] bg-[#f8f9fc] px-2 relative z-10">or</span>
+                <div class="absolute left-0 top-1/2 w-full h-px bg-[#d0d7e7] -translate-y-1/2 z-0"></div>
+            </div>
+
+            <form action="/auth/google" method="GET">
+
+                <input type="hidden" name="redirect" value="<%= redirect %>">
+
+                <button type="submit"
+                    class="w-full h-11 bg-[#e7ebf3] text-[#0e121b] font-bold flex items-center justify-center gap-2 rounded-xl hover:bg-[#d6dbe6] transition">
+
+                    Continue with Google
+
+                </button>
+
+            </form>
+
+            <p class="text-xs text-[#4e6797] text-center px-2">
+                This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.
+            </p>
+
+            <p class="text-sm text-[#4e6797] text-center underline">
+                New to TechFocus? <a href="/users/signup" class="font-medium text-[#0e121b]">Create an account</a>
+            </p>
+        </div>
+    </main>
+</body>
+
+</html>
