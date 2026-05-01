@@ -27,7 +27,12 @@ app.use(compression());
 // ✅ CORS — React frontend ke liye fix kiya
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://ecommerce-frontend-three-beta.vercel.app",
+      "https://ecommerce-frontend-git-main-tarunsenwork-9883s-projects.vercel.app",
+      "https://ecommerce-frontend-raeil1ker-tarunsenwork-9883s-projects.vercel.app"
+    ],
     credentials: true,
   })
 );
