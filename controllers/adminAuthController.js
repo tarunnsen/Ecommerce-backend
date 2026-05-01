@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
+// ✅ Admin create karo (one-time setup)
 exports.createAdmin = async (req, res) => {
   try {
     let salt = await bcrypt.genSalt(10);
@@ -18,12 +19,6 @@ exports.createAdmin = async (req, res) => {
 
     await user.save();
 
-    let token = jwt.sign(
-      { email: "tarun@gmail.com", admin: true },
-      process.env.JWT_KEY
-    );
-
-    res.cookie("token", token);
     res.json({ success: true, message: "Admin created successfully" });
 
   } catch (err) {
@@ -31,7 +26,12 @@ exports.createAdmin = async (req, res) => {
   }
 };
 
-// ✅ React admin login page handle karega
+// ✅ Login page — React handle karega
+exports.loginPage = (req, res) => {
+  res.redirect(`${FRONTEND_URL}/admin/login`);
+};
+
+// ✅ Login — token response mein bhejo
 exports.loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -52,11 +52,11 @@ exports.loginAdmin = async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // ✅ Token JSON mein bhejo — cookie ki zaroorat nahi
+    // ✅ Token JSON mein bhejo — React localStorage mein save karega
     res.json({
       success: true,
       message: "Login successful",
-      token  // ← React localStorage mein save karega
+      token
     });
 
   } catch (err) {
@@ -64,46 +64,13 @@ exports.loginAdmin = async (req, res) => {
   }
 };
 
-exports.loginAdmin = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const admin = await adminModel.findOne({ email });
-    if (!admin) {
-      return res.status(404).json({ success: false, message: "Admin not found" });
-    }
-
-    const valid = await bcrypt.compare(password, admin.password);
-    if (!valid) {
-      return res.status(401).json({ success: false, message: "Invalid password" });
-    }
-
-    const token = jwt.sign(
-      { email: admin.email, admin: true },
-      process.env.JWT_KEY
-    );
-
-    // ✅ Cookie set karo — React frontend use karega
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
-    res.json({ success: true, message: "Login successful" });
-
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
+// ✅ Logout
 exports.logoutAdmin = (req, res) => {
   res.clearCookie("token");
   res.json({ success: true, message: "Logged out successfully" });
 };
 
-// ✅ React admin dashboard handle karega
+// ✅ Dashboard
 exports.dashboard = (req, res) => {
   res.json({ success: true, message: "Admin dashboard" });
 };
