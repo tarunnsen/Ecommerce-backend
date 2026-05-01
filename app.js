@@ -7,6 +7,7 @@ const dotenv = require("dotenv");
 const compression = require("compression");
 const cors = require("cors");
 const morgan = require("morgan");
+const MongoStore = require("connect-mongo");
 
 dotenv.config();
 
@@ -53,11 +54,20 @@ app.use(express.urlencoded({ extended: true }));
 // 🔐 SESSION CONFIG
 // ======================
 
+// Upar add karo
+const MongoStore = require("connect-mongo");
+
+// Session config replace karo
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "super_secret_key",
     resave: false,
     saveUninitialized: false,
+    // ✅ MongoDB mein sessions save karo
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      ttl: 24 * 60 * 60, // 1 din
+    }),
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
