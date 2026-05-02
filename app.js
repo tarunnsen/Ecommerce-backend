@@ -24,7 +24,7 @@ app.set("trust proxy", 1);
 
 app.use(compression());
 
-// ✅ CORS — React frontend ke liye (credentials + multiple origins)
+// ✅ CORS
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -34,7 +34,6 @@ app.use(
         "https://ecommerce-frontend-git-main-tarunsenwork-9883s-projects.vercel.app",
         "https://ecommerce-frontend-raeil1ker-tarunsenwork-9883s-projects.vercel.app",
       ];
-      // Allow requests with no origin (mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("CORS: Origin not allowed — " + origin));
@@ -45,7 +44,7 @@ app.use(
   })
 );
 
-// ✅ OPTIONS preflight — CORS ke baad, session se PEHLE
+// ✅ OPTIONS preflight
 app.options("*", cors());
 
 app.use(
@@ -56,8 +55,6 @@ app.use(
 app.use("/uploads", express.static("uploads"));
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ FIX 1: cookieParser HATAYA — express-session khud cookie read karta hai
-//    cookieParser + express-session saath mein cookie conflict karte hain
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -70,17 +67,17 @@ app.use(
     secret: process.env.SESSION_SECRET || "super_secret_key",
     resave: false,
     saveUninitialized: false,
-    proxy: true, // ✅ Render reverse proxy ke liye zaroori
+    proxy: true,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
-      ttl: 24 * 60 * 60, // 1 din = 86400 seconds
+      ttl: 24 * 60 * 60,
       autoRemove: "native",
     }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",   // HTTPS pe true
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cross-domain ke liye "none"
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -92,38 +89,9 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ======================
-// 🔁 AUTH MIDDLEWARE — FIX 2: /cart/auth-check ko block mat karo
-// ======================
-
-app.use((req, res, next) => {
-  const isStaticFile = req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg)$/);
-
-  // ✅ Yeh routes publicly accessible hone chahiye — inhe 401 mat do
-  const publicPaths = [
-    "/cart/auth-check", // ← SABSE ZAROORI: frontend isse login check karta hai
-    "/auth",            // Google OAuth routes
-    "/login",
-    "/product",         // Products publicly visible hone chahiye
-    "/order",
-  ];
-
-  const isPublic = publicPaths.some((p) => req.path.startsWith(p));
-
-  const needsAuthRoute =
-    req.path.startsWith("/cart") ||
-    req.path.startsWith("/checkout");
-
-  if (!req.user && needsAuthRoute && !isStaticFile && !isPublic) {
-    return res.status(401).json({
-      success: false,
-      message: "Login required",
-      redirect: "/login",
-    });
-  }
-
-  next();
-});
+// ✅ APP LEVEL AUTH MIDDLEWARE HATAYA — 
+// Ye JWT wali requests ko block kar raha tha mobile pe!
+// Ab har route ka apna validateUser middleware handle karega.
 
 // ======================
 //  ROUTES
