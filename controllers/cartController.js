@@ -113,20 +113,7 @@ exports.decreaseQuantity = async (req, res) => {
     }
 
     await cart.save();
-
-    const updatedCart = await cartModel
-      .findOne({ user: userId })
-      .populate("products.productId");
-
-    const total = updatedCart.products.reduce((sum, item) => {
-      const price = item.productId?.discountPrice || item.productId?.price || 0;
-      return sum + price * item.quantity;
-    }, 0);
-
-    res.json({
-      success: true,
-      data: { _id: updatedCart._id, products: updatedCart.products, total },
-    });
+    res.json({ success: true });
   } catch (err) {
     console.error("Decrease quantity error:", err);
     res.status(500).json({ success: false, message: err.message });
@@ -147,20 +134,7 @@ exports.removeFromCart = async (req, res) => {
     );
 
     await cart.save();
-
-    const updatedCart = await cartModel
-      .findOne({ user: userId })
-      .populate("products.productId");
-
-    const total = updatedCart.products.reduce((sum, item) => {
-      const price = item.productId?.discountPrice || item.productId?.price || 0;
-      return sum + price * item.quantity;
-    }, 0);
-
-    res.json({
-      success: true,
-      data: { _id: updatedCart._id, products: updatedCart.products, total },
-    });
+    res.json({ success: true });
   } catch (err) {
     console.error("Remove from cart error:", err);
     res.status(500).json({ success: false, message: err.message });
