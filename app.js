@@ -15,16 +15,10 @@ require("./config/google_auth");
 
 const app = express();
 
-// ✅ Trust proxy — SABSE PEHLE (Render ke liye zaroori)
 app.set("trust proxy", 1);
-
-// ======================
-// 🔧 GLOBAL MIDDLEWARES
-// ======================
 
 app.use(compression());
 
-// ✅ CORS
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -39,28 +33,20 @@ app.use(
       return callback(new Error("CORS: Origin not allowed — " + origin));
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// ✅ OPTIONS preflight
 app.options("*", cors());
 
-app.use(
-  morgan(process.env.NODE_ENV === "production" ? "combined" : "dev")
-);
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
-// Static files
 app.use("/uploads", express.static("uploads"));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ======================
-// 🔐 SESSION CONFIG
-// ======================
 
 app.use(
   session({
@@ -82,20 +68,8 @@ app.use(
   })
 );
 
-// ======================
-// 🔑 PASSPORT
-// ======================
-
 app.use(passport.initialize());
 app.use(passport.session());
-
-// ✅ APP LEVEL AUTH MIDDLEWARE HATAYA — 
-// Ye JWT wali requests ko block kar raha tha mobile pe!
-// Ab har route ka apna validateUser middleware handle karega.
-
-// ======================
-//  ROUTES
-// ======================
 
 app.use("/", require("./routes"));
 app.use("/cart", require("./routes/cart"));
@@ -106,27 +80,15 @@ app.use("/product", require("./routes/product"));
 app.use("/payment", require("./routes/payment"));
 app.use("/order", require("./routes/order"));
 
-// ======================
-//  DEBUG ROUTES (DEV ONLY)
-// ======================
-
 if (process.env.NODE_ENV !== "production") {
   const expressListRoutes = require("express-list-routes");
   expressListRoutes(app);
 }
 
-// ======================
-//  GLOBAL ERROR HANDLER
-// ======================
-
 app.use((err, req, res, next) => {
   console.error("Global Error:", err.stack);
   res.status(500).json({ success: false, message: "Something went wrong!" });
 });
-
-// ======================
-//  SERVER START
-// ======================
 
 const PORT = process.env.PORT || 3000;
 
